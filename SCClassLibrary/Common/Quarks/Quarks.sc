@@ -212,6 +212,13 @@ Quarks {
 				^false
 			});
 		};
+		if (quark.needsBuild) {
+		  "Building %".format(quark.name).postln;
+			if (quark.build().not) {
+				("Failed to build" + quark.name).error;
+				^false
+			};
+		};
 		this.link(quark.localPath);
 		(quark.name + "installed").postln;
 		this.clearCache();
@@ -260,7 +267,7 @@ Quarks {
 				isURL: "://"
 			);
 		});
-	}
+  }
 	*at { |name|
 		var q;
 		^cache[name] ?? {

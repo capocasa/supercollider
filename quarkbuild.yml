@@ -1,0 +1,6 @@
+includePaths:
+    -   ./SCClassLibrary
+    -   /home/carlo/ExampleBuildQuark
+excludePaths:
+    []
+postInlineWarnings: false

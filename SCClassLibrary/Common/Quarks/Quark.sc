@@ -1,6 +1,7 @@
 
 Quark {
 	var <name, url, >refspec, data, <localPath;
+  classvar <scPath;
 	var <changed = false, <git;
 
 	*new { |name, refspec, url, localPath|
@@ -30,6 +31,9 @@ Quark {
 			git = Git(localPath);
 		});
 	}
+  *initClass {
+	  scPath = Platform.userAppSupportDir +/+ "quarks-build-include"
+  }
 	data {
 		^data ?? {
 			data = this.parseQuarkFile() ?? { IdentityDictionary.new }
@@ -93,6 +97,10 @@ Quark {
 		}, {
 			("Quark" + name + "was not installed using git, cannot update.").warn;
 		});
+		if (this.needsBuild) {
+      this.build();
+			"Quark % update built".format(name).postln;
+    };
 	}
 	uninstall {
 		Quarks.uninstallQuark(this);
@@ -284,4 +292,35 @@ Quark {
 		});
 		HelpBrowser.openBrowsePage("Quarks>" ++ name);
 	}
+	needsBuild {
+		^File.exists(localPath +/+ "build.scd").postln;
+	}
+	build {
+    this.class.initBuild();
+    ^Environment.use {
+      ~name = name;
+      ~url = url;
+      ~refspec = refspec;
+      ~localPath = localPath;
+      ~data = data;
+      ~scPath = scPath;
+		  (localPath +/+ "build.scd").load;
+    }
+	}
+  *initBuild {
+    var git, f;
+    if (File.exists(scPath)) {
+      if (Git.isGit(scPath).not) {
+        "%s is not a git repository, please move and try again".format(scPath).error;
+        ^false;
+      };
+      // TODO: verify version
+      ^true;
+    };
+    "Initializing build directory %s".format(scPath).postln;
+    File.mkdir(scPath);
+    "git clone https://github.com/supercollider/supercollider % &&"
+    "cd % &&"
+    "git checkout Version-%".format(scPath, scPath, Main.version).systemCmd;
+  }
 }
